@@ -40,5 +40,5 @@ processRequest sock client host port = do
 buildResponse :: String -> HostName -> PortNumber -> String
 buildResponse message host port = message ++
                                   "IP: " ++ host ++ "\n" ++
-                                  "Port: " ++ (show port) ++
+                                  "Port: " ++ (show port) ++ "\n" ++
                                   "StudentID: 11420952"
