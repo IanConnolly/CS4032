@@ -11,7 +11,7 @@ main :: IO ()
 main = do
     args <- getArgs
     sock <- listenOn $ PortNumber $ fromIntegral $ read $ head args
-    putStrLn $ "Server listening on: " ++ (head args)
+    putStrLn $ "Server listening on: " ++ head args
     handleConnections sock
 
 handleConnections :: Socket -> IO ()
@@ -25,12 +25,12 @@ processRequest :: Socket -> Handle -> HostName -> PortNumber -> IO ()
 processRequest sock client host port = do
     message <- hGetLine client
 
-    case (head $ words $ message) of
+    case head $ words message of
         "KILL_SERVICE" -> do
             hPutStrLn client exitMessage
             sClose sock
             exitSuccess
-        "HELO" -> do
+        "HELO" ->
             hPutStrLn client $ buildResponse message host port
         otherwise -> putStrLn errorMessage
 
@@ -40,5 +40,5 @@ processRequest sock client host port = do
 buildResponse :: String -> HostName -> PortNumber -> String
 buildResponse message host port = message ++
                                   "IP: " ++ host ++ "\n" ++
-                                  "Port: " ++ (show port) ++ "\n" ++
+                                  "Port: " ++ show port ++ "\n" ++
                                   "StudentID: 11420952"
