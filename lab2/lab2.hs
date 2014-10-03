@@ -1,7 +1,7 @@
 import System.Environment (getArgs)
 import System.IO
 import Network
-import Control.Concurrent
+import Control.Concurrent (forkIO)
 
 
 main :: IO ()
