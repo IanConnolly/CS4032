@@ -41,4 +41,4 @@ buildResponse :: String -> HostName -> PortNumber -> String
 buildResponse message host port = message ++
                                   "IP: " ++ host ++ "\n" ++
                                   "Port: " ++ (show port) ++
-                                  "StudentID: 1140952"
+                                  "StudentID: 11420952"
