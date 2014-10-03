@@ -13,11 +13,11 @@ main = do
 
 handleConnections :: Socket -> IO ()
 handleConnections sock = do
-    (client, _, _) <- accept sock -- accept data from network, blocks until we have a connection
+    (client, host, port) <- accept sock -- accept data from network, blocks until we have a connection
     hSetBuffering client NoBuffering
     forkIO $ processRequest client -- spawn new thread to process request
-    handleConnections sock -- recurse
+    handleConnections sock host port -- recurse
 
-processRequest :: Handle -> IO ()
+processRequest :: Handle -> HostName -> PortNumber -> IO ()
 processRequest client = do
     -- TODO
