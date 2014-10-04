@@ -5,7 +5,7 @@ import Network
 import Control.Concurrent (forkIO)
 
 errorMessage = "Unknown command"
-exitMessage = "Terminating..."
+exitMessage = "Client killed service. Byeeeee......"
 portNumber = PortNumber 8000 -- :: PortID
 
 main :: IO ()
