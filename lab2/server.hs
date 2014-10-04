@@ -31,9 +31,9 @@ processRequest sock client host port = do
     request <- hGetLine client
 
     case head $ words request of
-        "KILL_SERVICE" -> hPutStrLn client exitMessage >> sClose sock -- close the socket
-        "HELO" -> hPutStrLn client $ buildResponse request host port
-        otherwise -> hPutStrLn client $ errorMessage ++ request
+        "KILL_SERVICE" -> hPutStr client exitMessage >> sClose sock -- close the socket
+        "HELO" -> hPutStr client $ buildResponse request host port
+        otherwise -> hPutStr client $ errorMessage ++ request
 
     hClose client
 
