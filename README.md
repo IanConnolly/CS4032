@@ -30,7 +30,7 @@ of this repository or by running the individual folders' ```compile.sh```.
 * No extra dependencies
 * ```./compile.sh```
 * Start PHP echo server ```php -S localhost:8000```
-* ```./lab1```
+* ```./client```
 
 **Lab 2**
 
