@@ -19,7 +19,7 @@ handleConnections sock = do
     (client, host, port) <- accept sock -- accept data from network, blocks until we have a connection
     hSetBuffering client NoBuffering
     forkIO $ processRequest sock client host port -- spawn new thread to process request
-    handleConnections sock -- recurse
+    handleConnections sock -- recurse (ie. wait for next request)
 
 processRequest :: Socket -> Handle -> HostName -> PortNumber -> IO ()
 processRequest sock client host port = do
@@ -28,10 +28,9 @@ processRequest sock client host port = do
     case head $ words message of
         "KILL_SERVICE" -> do
             hPutStrLn client exitMessage
-            sClose sock
-            exitSuccess
-        "HELO" ->
-            hPutStrLn client $ buildResponse message host port
+            sClose sock -- close the socket
+            exitSuccess -- equivalent of exit(0) in C
+        "HELO" -> hPutStrLn client $ buildResponse message host port
         otherwise -> putStrLn errorMessage
 
     hClose client
