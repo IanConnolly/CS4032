@@ -27,12 +27,15 @@ handleConnections sock = do
 
 processRequest :: Socket -> Handle -> HostName -> PortNumber -> IO ()
 processRequest sock client host port = do
-    request <- hGetLine client
-
-    case head $ words request of
-        "KILL_SERVICE" -> hPutStr client exitMessage >> sClose sock -- close the socket
-        "HELO" -> hPutStr client $ buildResponse request host port
-        otherwise -> hPutStr client $ errorMessage ++ request
+    req <- try $ hGetLine client :: IO (Either IOError String)
+    case req of
+        Left _ -> putStrLn $ host ++ ":" ++ show port ++ " closed connection without sending data"
+        Right request -> do
+            putStrLn $ host ++ ":" ++ show port ++ " -> " ++ request -- log
+            case head $ words request of -- pattern match first 'word' in request
+                "KILL_SERVICE" -> hPutStr client exitMessage >> sClose sock -- close the socket
+                "HELO" -> hPutStr client $ buildResponse request host port
+                otherwise -> hPutStr client $ errorMessage ++ request
 
     hClose client
 
