@@ -4,6 +4,7 @@ import System.Exit
 import System.IO
 import Control.Monad
 import Control.Exception
+import Data.List
 
 path     = "GET /echo.php?message="
 protocol = "HTTP/1.1\r\n"
@@ -23,14 +24,17 @@ main :: IO ()
 main = withSocketsDo $ do
     socket <- createTCPSocket
     connect socket (SockAddrInet port localhost)
-    query <- prompt "Enter string to uppercase: "
-    send socket (path ++ query ++ " " ++ protocol ++ headers)
+    s <- prompt "Enter string to uppercase: "
+    send socket (path ++ queryify s ++ " " ++ protocol ++ headers)
     forever $ do
         res <- try $ recv socket chunkSize :: IO (Either IOError String)
         case res of
             Left _ -> exitSuccess -- recv throws IOError on EOF
             Right s -> putStr s
 
+
+queryify :: String -> String
+queryify s = intercalate "+" $ words s
 
 createTCPSocket :: IO Socket
 createTCPSocket = socket AF_INET Stream defaultProtocol
