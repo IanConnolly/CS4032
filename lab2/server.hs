@@ -5,14 +5,15 @@ import Control.Exception
 import Network
 import Control.Concurrent (forkIO)
 
-errorMessage = "Unknown command"
+errorMessage = "Unknown command: "
 exitMessage = "Client killed service. Byeeeee......"
-portNumber = PortNumber 8000 -- :: PortID
+
 
 main :: IO ()
 main = do
-    sock <- listenOn portNumber
-    putStrLn $ "Server listening on: " ++ show portNumber
+    (portString : _) <- getArgs
+    sock <- listenOn $ PortNumber $ fromIntegral (read portString :: Int)
+    putStrLn $ "Server listening on port " ++ portString
     handleConnections sock
 
 handleConnections :: Socket -> IO ()
@@ -27,20 +28,18 @@ handleConnections sock = do
 
 processRequest :: Socket -> Handle -> HostName -> PortNumber -> IO ()
 processRequest sock client host port = do
-    message <- hGetLine client
+    request <- hGetLine client
 
-    case head $ words message of
-        "KILL_SERVICE" -> do
-            hPutStrLn client exitMessage
-            sClose sock -- close the socket
-        "HELO" -> hPutStrLn client $ buildResponse message host port
-        otherwise -> putStrLn errorMessage
+    case head $ words request of
+        "KILL_SERVICE" -> hPutStrLn client exitMessage >> sClose sock -- close the socket
+        "HELO" -> hPutStrLn client $ buildResponse request host port
+        otherwise -> hPutStrLn client $ errorMessage ++ request
 
     hClose client
 
 
 buildResponse :: String -> HostName -> PortNumber -> String
-buildResponse message host port = message ++ "\n" ++
-                                  "IP: " ++ host ++ "\n" ++
-                                  "Port: " ++ show port ++ "\n" ++
-                                  "StudentID: 11420952"
+buildResponse message host port = unlines [message,
+                                           "IP: " ++ host,
+                                           "Port: " ++ show port,
+                                           "StudentID: 11420952"]
