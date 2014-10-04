@@ -10,3 +10,6 @@ cabal-dev
 cabal.sandbox.config
 cabal.config
 .DS_Store
+lab1
+client
+server

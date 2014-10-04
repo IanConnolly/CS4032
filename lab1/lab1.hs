@@ -1,3 +1,4 @@
+import Network
 import Network.Socket
 import System.Exit
 import System.IO
@@ -19,7 +20,7 @@ port = 8000
 chunkSize = 4096
 
 main :: IO ()
-main = do
+main = withSocketsDo $ do
     socket <- createTCPSocket
     connect socket (SockAddrInet port localhost)
     query <- prompt "Enter string to uppercase: "

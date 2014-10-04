@@ -5,7 +5,7 @@ import System.Exit
 import System.Environment
 
 main :: IO ()
-main = do
+main = withSocketsDo $ do
     (host : portString : _) <- getArgs
     let port = PortNumber $ fromIntegral (read portString :: Int)
     sendMessages host port

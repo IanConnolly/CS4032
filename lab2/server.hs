@@ -9,7 +9,7 @@ errorMessage = "Unknown command: "
 exitMessage = "Client killed service. Byeeeee......"
 
 main :: IO ()
-main = do
+main = withSocketsDo $ do
     (portString : _) <- getArgs
     sock <- listenOn $ PortNumber $ fromIntegral (read portString :: Int)
     putStrLn $ "Server listening on port " ++ portString
