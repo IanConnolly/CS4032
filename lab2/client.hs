@@ -4,14 +4,11 @@ import System.IO
 import System.Exit
 import System.Environment
 
-
-
 main :: IO ()
 main = do
     (host : portString : _) <- getArgs
     let port = PortNumber $ fromIntegral (read portString :: Int)
     sendMessages host port
-
 
 sendMessages :: HostName -> PortID -> IO ()
 sendMessages host port = do
@@ -27,7 +24,6 @@ sendMessages host port = do
     resp <- hGetContents sock
     putStrLn resp
     sendMessages host port
-
 
 prompt :: String -> IO String
 prompt p = do

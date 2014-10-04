@@ -8,7 +8,6 @@ import Control.Concurrent (forkIO)
 errorMessage = "Unknown command: "
 exitMessage = "Client killed service. Byeeeee......"
 
-
 main :: IO ()
 main = do
     (portString : _) <- getArgs
@@ -36,7 +35,6 @@ processRequest sock client host port = do
         otherwise -> hPutStr client $ errorMessage ++ request
 
     hClose client
-
 
 buildResponse :: String -> HostName -> PortNumber -> String
 buildResponse message host port = unlines [message,
