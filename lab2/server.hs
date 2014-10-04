@@ -1,6 +1,7 @@
 import System.Environment (getArgs)
 import System.Exit
 import System.IO
+import Control.Exception
 import Network
 import Control.Concurrent (forkIO)
 
@@ -16,10 +17,13 @@ main = do
 
 handleConnections :: Socket -> IO ()
 handleConnections sock = do
-    (client, host, port) <- accept sock -- accept data from network, blocks until we have a connection
-    hSetBuffering client NoBuffering
-    forkIO $ processRequest sock client host port -- spawn new thread to process request
-    handleConnections sock -- recurse (ie. wait for next request)
+    res <- try $ accept sock :: IO (Either IOError (Handle, HostName, PortNumber))
+    case res of
+        Left _ -> exitSuccess -- we're done, exit(0)
+        Right (client, host, port) -> do
+            hSetBuffering client NoBuffering
+            forkIO $ processRequest sock client host port -- spawn new thread to process request
+            handleConnections sock -- recurse (ie. wait for next request)
 
 processRequest :: Socket -> Handle -> HostName -> PortNumber -> IO ()
 processRequest sock client host port = do
@@ -29,7 +33,6 @@ processRequest sock client host port = do
         "KILL_SERVICE" -> do
             hPutStrLn client exitMessage
             sClose sock -- close the socket
-            exitSuccess -- equivalent of exit(0) in C
         "HELO" -> hPutStrLn client $ buildResponse message host port
         otherwise -> putStrLn errorMessage
 

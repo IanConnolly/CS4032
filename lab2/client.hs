@@ -18,9 +18,14 @@ sendMessages host port = do
     sock <- connectTo host port
     message <- prompt "Enter message to send: "
     hPutStrLn sock message
+
+    when (head (words message) == "KILL_SERVICE") $ do
+        lastMessage <- hGetLine sock
+        putStrLn lastMessage
+        exitSuccess
+
     resp <- hGetContents sock
     putStrLn resp
-    when (head (words message) == "KILL_SERVICE") exitSuccess
     sendMessages host port
 
 
