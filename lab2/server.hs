@@ -6,12 +6,12 @@ import Control.Concurrent (forkIO)
 
 errorMessage = "Unknown command"
 exitMessage = "Terminating..."
+portNumber = PortNumber 8000 -- :: PortID
 
 main :: IO ()
 main = do
-    args <- getArgs
-    sock <- listenOn $ PortNumber $ fromIntegral $ read $ head args
-    putStrLn $ "Server listening on: " ++ head args
+    sock <- listenOn portNumber
+    putStrLn $ "Server listening on: " ++ show portNumber
     handleConnections sock
 
 handleConnections :: Socket -> IO ()
@@ -38,7 +38,7 @@ processRequest sock client host port = do
 
 
 buildResponse :: String -> HostName -> PortNumber -> String
-buildResponse message host port = message ++ "\n"
+buildResponse message host port = message ++ "\n" ++
                                   "IP: " ++ host ++ "\n" ++
                                   "Port: " ++ show port ++ "\n" ++
                                   "StudentID: 11420952"
