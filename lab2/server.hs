@@ -39,9 +39,9 @@ processRequest :: Socket -> Handle -> HostName -> PortNumber -> Semaphore -> IO 
 processRequest sock client host port sem = do
     req <- try $ hGetLine client :: IO (Either IOError String)
     case req of
-        Left _ -> putStrLn $ host ++ ":" ++ show port ++ " closed connection without sending data"
+        Left _ -> putStrLn $ serverLog host port "[closed connection without sending data]"
         Right request -> do
-            putStrLn $ host ++ ":" ++ show port ++ " -> " ++ request -- log
+            putStrLn $ serverLog host port request -- log
             case head $ words request of -- pattern match first 'word' in request
                 "KILL_SERVICE" -> hPutStr client exitMessage >> sClose sock -- close the socket
                 "HELO" -> hPutStr client $ buildResponse request host port
@@ -49,6 +49,10 @@ processRequest sock client host port sem = do
 
     hClose client
     signalSem sem
+
+
+serverLog :: HostName -> PortNumber -> String -> String
+serverLog host port message = host ++ ":" ++ show port ++ " -> " ++ message
 
 buildResponse :: String -> HostName -> PortNumber -> String
 buildResponse message host port = unlines [message,
