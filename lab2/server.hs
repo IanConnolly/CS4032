@@ -17,7 +17,7 @@ main = withSocketsDo $ do
     sock <- listenOn $ PortNumber $ fromIntegral (read portString :: Int)
     putStrLn $ "Server listening on port " ++ portString
     sem <- newSem maxConnections -- initialise our semaphore
-    handleConnections sock sem
+    handleConnections sock sem -- start server loop
 
 handleConnections :: Socket -> Semaphore -> IO ()
 handleConnections sock sem = do
@@ -25,14 +25,15 @@ handleConnections sock sem = do
     case res of
         Left _ -> exitSuccess -- we're done, exit(0)
         Right (client, host, port) -> do
-            hSetBuffering client NoBuffering
+            hSetBuffering client NoBuffering -- don't buffer output to client
+
             areResourcesAvailable <- pullSem sem -- check if there are enough resources
             if areResourcesAvailable then do
                 forkIO $ processRequest sock client host port sem -- spawn new thread to process request
-                handleConnections sock sem -- recurse (ie. wait for next request)
+                handleConnections sock sem -- (tail) recurse (ie. wait for next request)
             else do
-                hPutStr client "Server overloaded."
-                handleConnections sock sem
+                hPutStr client "Server overloaded." >> hClose client
+                handleConnections sock sem -- (tail) recurse (ie. wait for next request)
 
 
 processRequest :: Socket -> Handle -> HostName -> PortNumber -> Semaphore -> IO ()
@@ -42,13 +43,14 @@ processRequest sock client host port sem = do
         Left _ -> putStrLn $ serverLog host port "[closed connection without sending data]"
         Right request -> do
             putStrLn $ serverLog host port request -- log
-            case head $ words request of -- pattern match first 'word' in request
+
+            case head $ words request of -- pattern match the first 'word' in request
                 "KILL_SERVICE" -> hPutStr client exitMessage >> sClose sock -- close the socket
                 "HELO" -> hPutStr client $ buildResponse request host port
                 otherwise -> hPutStr client $ errorMessage ++ request
 
     hClose client
-    signalSem sem
+    signalSem sem -- free up the 'resources' this 'thread' is using
 
 
 serverLog :: HostName -> PortNumber -> String -> String
