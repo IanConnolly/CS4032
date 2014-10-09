@@ -4,29 +4,39 @@ import System.IO
 import Control.Exception
 import Network
 import Control.Concurrent (forkIO)
+import Data.IORef
 
 errorMessage = "Unknown command: "
 exitMessage = "Client killed service. Byeeeee......"
+maxConnections = 2000 -- some arbritrary constant for exposition
+
 
 main :: IO ()
 main = withSocketsDo $ do
     (portString : _) <- getArgs
     sock <- listenOn $ PortNumber $ fromIntegral (read portString :: Int)
     putStrLn $ "Server listening on port " ++ portString
-    handleConnections sock
+    sem <- newSem maxConnections -- initialise our semaphore
+    handleConnections sock sem
 
-handleConnections :: Socket -> IO ()
-handleConnections sock = do
+handleConnections :: Socket -> Semaphore -> IO ()
+handleConnections sock sem = do
     res <- try $ accept sock :: IO (Either IOError (Handle, HostName, PortNumber))
     case res of
         Left _ -> exitSuccess -- we're done, exit(0)
         Right (client, host, port) -> do
             hSetBuffering client NoBuffering
-            forkIO $ processRequest sock client host port -- spawn new thread to process request
-            handleConnections sock -- recurse (ie. wait for next request)
+            areResourcesAvailable <- pullSem sem -- check if there are enough resources
+            if areResourcesAvailable then do
+                forkIO $ processRequest sock client host port sem -- spawn new thread to process request
+                handleConnections sock sem -- recurse (ie. wait for next request)
+            else do
+                hPutStr client "Server overloaded."
+                handleConnections sock sem
 
-processRequest :: Socket -> Handle -> HostName -> PortNumber -> IO ()
-processRequest sock client host port = do
+
+processRequest :: Socket -> Handle -> HostName -> PortNumber -> Semaphore -> IO ()
+processRequest sock client host port sem = do
     req <- try $ hGetLine client :: IO (Either IOError String)
     case req of
         Left _ -> putStrLn $ host ++ ":" ++ show port ++ " closed connection without sending data"
@@ -38,9 +48,29 @@ processRequest sock client host port = do
                 otherwise -> hPutStr client $ errorMessage ++ request
 
     hClose client
+    signalSem sem
 
 buildResponse :: String -> HostName -> PortNumber -> String
 buildResponse message host port = unlines [message,
                                            "IP: " ++ host,
                                            "Port: " ++ show port] ++
                                            "StudentID: 11420952"
+
+-- semaphore implementation
+
+newtype Semaphore = Semaphore (IORef Int)
+
+newSem :: Int -> IO Semaphore
+newSem i = do
+    sem <- newIORef i
+    return (Semaphore sem)
+
+pullSem :: Semaphore -> IO Bool
+pullSem (Semaphore s) = atomicModifyIORef s $ \x -> if x == 0 then
+                                                        (x, False)
+                                                    else let !z = x - 1 -- make the binding strict
+                                                         in (z, True)
+
+signalSem :: Semaphore -> IO ()
+signalSem (Semaphore s) = atomicModifyIORef s $ \x -> let !z = x + 1 -- make the binding stricts
+                                                      in (z, ())
