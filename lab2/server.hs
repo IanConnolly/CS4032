@@ -5,10 +5,11 @@ import Control.Exception
 import Network
 import Control.Concurrent (forkIO)
 import Data.IORef
+import Control.Monad
 
 errorMessage = "Unknown command: "
 exitMessage = "Client killed service. Byeeeee......"
-maxConnections = 2000 -- some arbritrary constant for exposition
+maxConnections = 0 -- some arbritrary constant for exposition
 
 
 main :: IO ()
@@ -32,6 +33,7 @@ handleConnections sock sem = do
                 forkIO $ processRequest sock client host port sem -- spawn new thread to process request
                 handleConnections sock sem -- (tail) recurse (ie. wait for next request)
             else do
+                putStrLn $ serverLog host port "[Connection dropped, server overloaded]"
                 hPutStr client "Server overloaded." >> hClose client
                 handleConnections sock sem -- (tail) recurse (ie. wait for next request)
 
@@ -67,16 +69,14 @@ buildResponse message host port = unlines [message,
 newtype Semaphore = Semaphore (IORef Int)
 
 newSem :: Int -> IO Semaphore
-newSem i = do
-    sem <- newIORef i
-    return (Semaphore sem)
+newSem i = liftM Semaphore $ newIORef i
 
 pullSem :: Semaphore -> IO Bool
 pullSem (Semaphore s) = atomicModifyIORef s $ \x -> if x == 0 then
                                                         (x, False)
-                                                    else let !z = x - 1 -- make the binding strict
+                                                    else let !z = x - 1 -- make the decrement happen right now
                                                          in (z, True)
 
 signalSem :: Semaphore -> IO ()
-signalSem (Semaphore s) = atomicModifyIORef s $ \x -> let !z = x + 1 -- make the binding stricts
+signalSem (Semaphore s) = atomicModifyIORef s $ \x -> let !z = x + 1 -- make the increment happen right now
                                                       in (z, ())
