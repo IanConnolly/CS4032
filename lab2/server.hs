@@ -9,7 +9,7 @@ import Control.Monad
 
 errorMessage = "Unknown command: "
 exitMessage = "Client killed service. Byeeeee......"
-maxConnections = 0 -- some arbritrary constant for exposition
+maxConnections = 2000 -- some arbritrary constant for exposition
 
 
 main :: IO ()
