@@ -52,7 +52,8 @@ of this repository or by running the individual folders' ```compile.sh```.
 
 **Chat Server**
 
-/shruggie rn
+* Python dependencies
+* ```python chat_server/lab4.py```
 
 **Distributed File System**
 
