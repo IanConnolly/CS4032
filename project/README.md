@@ -12,8 +12,8 @@ Implemented are:
 * Local proxy library ([IanConnolly/remote_file_proxy](https://github.com/IanConnolly/remote_file_proxy))
 * Distributed File Server ([IanConnolly/distributed_file_server](https://github.com/IanConnolly/distributed_file_server))
 * Directory Service ([IanConnolly/directory_server](https://github.com/IanConnolly/directory_server))
-* Caching (distributed_file_server/lib/distributed_file_server/cache.rb)
-* Replication (inherent in distributed_file_server)
+* Caching ([distributed_file_server/lib/distributed_file_server/cache.rb](https://github.com/IanConnolly/distributed_file_server/blob/master/lib/distributed_file_server/cache.rb))
+* Replication (inherent in [IanConnolly/distributed_file_server](https://github.com/IanConnolly/distributed_file_server))
 
 Note:
 
