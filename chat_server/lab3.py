@@ -20,6 +20,7 @@ class ChatRoom(object):
     def __init__(self):
         self.name = name
         self.ref = ref
+        self.users = []
 
 
 class Client(object):
@@ -68,23 +69,35 @@ class Server(object):
         self.userc += 1
 
         # create Client object and other state etc.
-        self._dispatch_thread(self._process_message, sock)
+        self._dispatch_thread(self._process_message, sock, newbie.uid)
 
 
     def _dispatch_thread(self, f, sock):
         self.threads.add_task(f, self, sock)
 
 
-    def _process_message(self, sock):
+    def _process_message(self, sock, uid=None):
         data = recv_all(sock)
 
         msg = data.splitlines()
         msg = map(lambda s: s.split(), msg)
 
         if msg[0][0] == "JOIN_CHATROOM:":
-            room = msg[0][1]
+            rname = msg[0][1]
             name = msg[3][1]
 
+            room_ref = None
+            for ref, r in self.chat_rooms.items():
+                if r.name == rname:
+                    room_ref = ref
+                    
+            if room_ref == None:
+                sock.write(error(2, "Unknown chat room: {}".format(room)))
+                return
+
+            self.chat_rooms[room_ref].users.append(self.users[uid])
+            sock.write(joined(self.chat_rooms[room_ref].name, room_ref, self.host, self.port, uid))
+            return
 
         elif msg[0][0] == "LEAVE_CHATROOM:":
             ref = msg[0][1]
@@ -112,7 +125,16 @@ class Server(object):
 
 
         elif msg[0][0] == "DISCONNECT:":
-            pass
+            uid = msg[2][1]
+
+            for room in self.chat_rooms.values():
+                if uid in room:
+                    room.users.pop(uid, False)
+
+            del self.users[uid]
+            sock.write("DISCONNECTED")
+             
+
         elif msg[0][0] == "CHAT:":
             ref = msg[0][1]
             uid = msg[1][1]
