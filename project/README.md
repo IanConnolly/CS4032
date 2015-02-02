@@ -1,4 +1,4 @@
-## Distributed File System**
+## Distributed File System
 
 * Ruby dependencies
 * ```./compile.sh```
@@ -9,9 +9,9 @@
 
 Implemented are:
 
-* Local proxy library (remote_file_proxy)
-* Distributed File Server (distributed_file_server)
-* Directory Service (directory_server)
+* Local proxy library ([IanConnolly/remote_file_proxy](https://github.com/IanConnolly/remote_file_proxy))
+* Distributed File Server ([IanConnolly/distributed_file_server](https://github.com/IanConnolly/distributed_file_server))
+* Directory Service ([IanConnolly/directory_server](https://github.com/IanConnolly/directory_server))
 * Caching (distributed_file_server/lib/distributed_file_server/cache.rb)
 * Replication (inherent in distributed_file_server)
 
